@@ -1,7 +1,8 @@
-console.log("--- 환경 변수 체크 ---");
-console.log("SUPABASE_URL 존재 여부:", !!process.env.SUPABASE_URL);
-console.log("PANDASCORE_API_KEY 존재 여부:", !!process.env.PANDASCORE_API_KEY);
-console.log("----------------------");
+console.log("--- 환경 변수 이름 목록 점검 ---");
+const envKeys = Object.keys(process.env);
+console.log("PANDA라는 글자가 포함된 변수들:", envKeys.filter(k => k.includes('PANDA')));
+console.log("SUPA라는 글자가 포함된 변수들:", envKeys.filter(k => k.includes('SUPA')));
+console.log("-------------------------------");
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 
