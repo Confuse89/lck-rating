@@ -2,7 +2,7 @@ name: LCK Roster Sync
 
 on:
   schedule:
-    - cron: '0,30 * * * *'
+    - cron: '0 * * * *' 
   workflow_dispatch: 
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20' 
 
       - name: Install dependencies
         run: npm install axios @supabase/supabase-js
@@ -24,8 +24,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          PANDASCORE_API_KEY: ${{ secrets.PANDASCORE_API_KEY }}
+          PANDASCORE_API_KEY: ${{ secrets.PANDASCORE_API_KEY }} 
         run: node scripts/sync-roster.js
-
-
-
