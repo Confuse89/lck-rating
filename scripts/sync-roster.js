@@ -1,6 +1,6 @@
 console.log("--- 환경 변수 이름 목록 점검 ---");
 const envKeys = Object.keys(process.env);
-console.log("PANDA라는 글자가 포함된 변수들:", envKeys.filter(k => k.includes('PANDA')));
+console.log("PSK라는 글자가 포함된 변수들:", envKeys.filter(k => k.includes('PSK')));
 console.log("SUPA라는 글자가 포함된 변수들:", envKeys.filter(k => k.includes('SUPA')));
 console.log("-------------------------------");
 const { createClient } = require('@supabase/supabase-js');
@@ -11,11 +11,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const PANDA_TOKEN = process.env.PANDA_TOKEN;
+const PANDA_TOKEN = process.env.PSK;
 
 async function syncWithPandaScore() {
-  if (!PANDA_TOKEN) {
-    console.error("오류: PANDASCORE_API_KEY 환경 변수가 전달되지 않았습니다.");
+  if (!PSK) {
+    console.error("오류: PSK 환경 변수가 전달되지 않았습니다.");
     return;
   }
   console.log(`API 키 확인됨: ${PANDA_TOKEN.substring(0, 4)}****`);
