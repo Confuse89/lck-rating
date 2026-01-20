@@ -13,10 +13,9 @@ async function syncRoster() {
     const params = {
       action: "cargoquery",
       format: "json",
-      tables: "Players=P, Teams=T",
-      join_on: "P.CurrentTeam = T.Team",
+      tables: "Players=P",
       fields: "P.ID, P.CurrentTeam, P.Role, P.Image",
-      where: "T.League = 'LCK' AND T.IsDisbanded = 0",
+      where: "P.Region = 'Korea'", 
       limit: 200
     };
 
@@ -24,14 +23,17 @@ async function syncRoster() {
     const players = response.data?.cargoquery || [];
     
     if (players.length === 0) {
-      console.log("데이터를 찾지 못했습니다.");
+      console.log("여전히 데이터를 찾지 못했습니다. API 응답 확인:", JSON.stringify(response.data));
       return;
     }
 
-    console.log(`${players.length}명의 데이터를 처리 중...`);
+    console.log(`${players.length}명의 데이터를 찾았습니다. DB 업로드 중...`);
 
     for (const item of players) {
       const p = item.title;
+      // 소속 팀이 있는 선수만 저장
+      if (!p.CurrentTeam) continue;
+
       const { error } = await supabase
         .from('players')
         .upsert({
@@ -41,11 +43,11 @@ async function syncRoster() {
           image_url: p.Image ? `https://lol.fandom.com/wiki/Special:FilePath/${p.Image}` : null
         }, { onConflict: 'name' });
         
-      if (error) console.error(`Error: ${p.ID}`, error);
+      if (error) console.error(`저장 실패: ${p.ID}`, error);
     }
-    console.log("동기화 완료!");
+    console.log("동기화 작업이 완료되었습니다!");
   } catch (err) {
-    console.error("에러:", err.message);
+    console.error("에러 발생:", err.message);
     process.exit(1);
   }
 }
