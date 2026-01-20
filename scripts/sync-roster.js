@@ -7,33 +7,30 @@ const supabase = createClient(
 );
 
 async function syncRoster() {
-  console.log("LCK 로스터 동기화 시작...");
+  console.log("LCK 선수 중심 동기화 시작...");
   try {
     const url = "https://lol.fandom.com/api.php";
     const params = {
       action: "cargoquery",
       format: "json",
-      tables: "Players=P",
-      fields: "P.ID, P.CurrentTeam, P.Role, P.Image",
-      where: "P.Region = 'Korea'", 
-      limit: 200
+      tables: "Players",
+      fields: "ID, CurrentTeam, Role, Image",
+      where: "Region = 'Korea' AND CurrentTeam IS NOT NULL", 
+      limit: 250
     };
 
     const response = await axios.get(url, { params });
-    const players = response.data?.cargoquery || [];
     
-    if (players.length === 0) {
-      console.log("여전히 데이터를 찾지 못했습니다. API 응답 확인:", JSON.stringify(response.data));
-      return;
+    if (!response.data || !response.data.cargoquery) {
+        console.log("API 응답이 비어있습니다.");
+        return;
     }
 
-    console.log(`${players.length}명의 데이터를 찾았습니다. DB 업로드 중...`);
+    const players = response.data.cargoquery.map(item => item.title);
 
-    for (const item of players) {
-      const p = item.title;
-      // 소속 팀이 있는 선수만 저장
-      if (!p.CurrentTeam) continue;
+    console.log(`총 ${players.length}명의 선수를 발견했습니다. DB 업로드를 시작합니다.`);
 
+    for (const p of players) {
       const { error } = await supabase
         .from('players')
         .upsert({
@@ -45,9 +42,10 @@ async function syncRoster() {
         
       if (error) console.error(`저장 실패: ${p.ID}`, error);
     }
-    console.log("동기화 작업이 완료되었습니다!");
+    
+    console.log("모든 선수의 로스터 동기화가 완료되었습니다!");
   } catch (err) {
-    console.error("에러 발생:", err.message);
+    console.error("실행 중 오류 발생:", err.message);
     process.exit(1);
   }
 }
