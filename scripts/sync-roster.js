@@ -16,13 +16,12 @@ async function syncRoster() {
       tables: "Players=P, Teams=T",
       join_on: "P.CurrentTeam = T.Team",
       fields: "P.ID, P.CurrentTeam, P.Role, P.Image",
-      where: "T.League = 'LCK' AND T.IsDisbanded = 0", // 해체된 팀 제외
+      where: "T.League = 'LCK' AND T.IsDisbanded = 0",
       limit: 500
     };
 
     const response = await axios.get(url, { params });
     
-    // 데이터 구조가 비어있을 경우를 대비한 방어 코드
     const players = response.data?.cargoquery || [];
     
     if (players.length === 0) {
