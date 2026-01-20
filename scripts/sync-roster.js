@@ -1,3 +1,7 @@
+console.log("--- 환경 변수 체크 ---");
+console.log("SUPABASE_URL 존재 여부:", !!process.env.SUPABASE_URL);
+console.log("PANDASCORE_API_KEY 존재 여부:", !!process.env.PANDASCORE_API_KEY);
+console.log("----------------------");
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 
