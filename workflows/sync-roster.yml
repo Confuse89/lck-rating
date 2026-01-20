@@ -1,0 +1,28 @@
+name: LCK Roster Sync
+
+on:
+  schedule:
+    # 매일 한국 시간 오전 4시(UTC 19시)에 자동 실행
+    - cron: '0 19 * * *'
+  workflow_dispatch: # 수동으로 즉시 실행하고 싶을 때 버튼 생성
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install axios @supabase/supabase-js
+
+      - name: Run sync script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync-roster.js
