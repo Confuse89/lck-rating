@@ -7,30 +7,40 @@ const supabase = createClient(
 );
 
 async function syncRoster() {
-  console.log("LCK 선수 데이터 검증 및 동기화 시작...");
+  console.log("LCK 선수 데이터 동기화 시작...");
   try {
     const url = "https://lol.fandom.com/api.php";
+    
+
     const params = {
       action: "cargoquery",
       format: "json",
       tables: "Players",
       fields: "ID, CurrentTeam, Role, Image",
-      where: "Region = 'Korea' AND CurrentTeam IS NOT NULL", 
-      limit: 200
+      where: "Region='Korea' AND IsRetired=0",
+      limit: 150
     };
 
     const response = await axios.get(url, { params });
     
-    if (!response.data || !response.data.cargoquery) {
-      console.error("API 응답 구조가 올바르지 않습니다.");
+
+    if (response.data.error) {
+      console.error("API 에러 발생:", response.data.error.info);
       return;
     }
 
-    const players = response.data.cargoquery.map(item => item.title);
-    console.log(`검증 완료: 총 ${players.length}명의 한국 활동 선수를 발견했습니다.`);
+    const data = response.data.cargoquery;
+    if (!data || data.length === 0) {
+      console.log("가져온 데이터가 비어있습니다. 응답 전체:", JSON.stringify(response.data));
+      return;
+    }
+
+    const players = data.map(item => item.title);
+    console.log(`성공: ${players.length}명의 데이터를 가져왔습니다.`);
 
     for (const p of players) {
-      // Supabase에 데이터 저장
+      if (!p.CurrentTeam) continue;
+
       const { error } = await supabase
         .from('players')
         .upsert({
@@ -40,13 +50,12 @@ async function syncRoster() {
           image_url: p.Image ? `https://lol.fandom.com/wiki/Special:FilePath/${p.Image.replace(/\s/g, '_')}` : null
         }, { onConflict: 'name' });
         
-      if (error) console.error(`저장 실패 (${p.ID}):`, error.message);
+      if (error) console.error(`DB 저장 실패 (${p.ID}):`, error.message);
     }
     
-    console.log("🎉 모든 로스터가 Supabase에 성공적으로 저장되었습니다!");
+    console.log("🎉 동기화 작업이 성공적으로 완료되었습니다!");
   } catch (err) {
-    console.error("동기화 중 치명적 오류:", err.message);
-    process.exit(1);
+    console.error("실행 중 오류:", err.message);
   }
 }
 
