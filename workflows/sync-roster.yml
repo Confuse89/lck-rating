@@ -17,15 +17,15 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
+- name: Install dependencies
         run: |
-          npm init -y
-          npm install axios @supabase/supabase-js
+          npm install axios @supabase/supabase-js  
 
       - name: Run sync script
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node ./scripts/sync-roster.js
+
 
 
