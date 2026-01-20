@@ -11,7 +11,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const PANDA_TOKEN = process.env.PANDASCORE_API_KEY;
+const PANDA_TOKEN = process.env.PANDA_TOKEN;
 
 async function syncWithPandaScore() {
   if (!PANDA_TOKEN) {
