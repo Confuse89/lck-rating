@@ -2,9 +2,8 @@ name: LCK Roster Sync
 
 on:
   schedule:
-    # 매일 한국 시간 오전 4시(UTC 19시)에 자동 실행
-    - cron: '0 19 * * *'
-  workflow_dispatch: # 수동으로 즉시 실행하고 싶을 때 버튼 생성
+    - cron: '0,20,40 * * * *'
+  workflow_dispatch: 
 
 jobs:
   sync:
@@ -18,7 +17,6 @@ jobs:
         with:
           node-version: '18'
 
-      # 도구 설치 과정을 확실히 추가합니다.
       - name: Install dependencies
         run: |
           npm init -y
@@ -29,4 +27,5 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node ./scripts/sync-roster.js
+
 
