@@ -10,17 +10,19 @@ const PANDA_TOKEN = process.env.PANDASCORE_API_KEY;
 
 async function syncWithPandaScore() {
   if (!PANDA_TOKEN) {
-    console.error("오류: PANDASCORE_API_KEY가 설정되지 않았습니다.");
+    console.error("오류: PANDASCORE_API_KEY 환경 변수가 전달되지 않았습니다.");
     return;
   }
+  console.log(`API 키 확인됨: ${PANDA_TOKEN.substring(0, 4)}****`);
 
-  console.log("PandaScore를 통해 LCK 로스터 동기화 시작...");
-  
   try {
+    console.log("PandaScore API로부터 LCK 로스터를 호출합니다...");
+    
     const response = await axios.get('https://api.pandascore.co/lol/players', {
       params: {
         'filter[league_id]': 293,
-        'per_page': 100
+        'per_page': 100,
+        'sort': 'name'
       },
       headers: { 
         'Authorization': `Bearer ${PANDA_TOKEN}`,
@@ -29,7 +31,7 @@ async function syncWithPandaScore() {
     });
 
     const players = response.data;
-    console.log(`PandaScore에서 ${players.length}명의 선수를 불러왔습니다.`);
+    console.log(`분석 완료: 총 ${players.length}명의 선수를 PandaScore에서 발견했습니다.`);
 
     for (const p of players) {
       if (!p.current_team) continue;
@@ -38,7 +40,7 @@ async function syncWithPandaScore() {
         .from('players')
         .upsert({
           name: p.name,
-          position: p.role,
+          position: p.role || 'Unknown',
           team_name: p.current_team.name,
           image_url: p.image_url
         }, { onConflict: 'name' });
@@ -46,12 +48,12 @@ async function syncWithPandaScore() {
       if (error) console.error(`DB 저장 에러 (${p.name}):`, error.message);
     }
 
-    console.log("🎉 동기화 완료!");
+    console.log("🎉 PandaScore 기반 LCK 로스터 동기화가 성공적으로 끝났습니다!");
   } catch (err) {
-    if (err.response && err.response.status === 401) {
-      console.error("오류 401: API 키가 유효하지 않습니다. PandaScore 대시보드에서 키를 다시 확인하세요.");
+    if (err.response) {
+      console.error(`API 오류 (${err.response.status}):`, err.response.data.error || err.message);
     } else {
-      console.error("동기화 중 오류:", err.message);
+      console.error("네트워크 오류:", err.message);
     }
   }
 }
