@@ -24,8 +24,9 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          PANDASCORE_API_KEY: ${{ secrets.PANDASCORE_API_KEY }}
+          PANDASCORE_API_KEY: ${{ secrets.PANDA_TOKEN }}
         run: node scripts/sync-roster.js
+
 
 
 
