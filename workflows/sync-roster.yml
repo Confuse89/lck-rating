@@ -2,7 +2,7 @@ name: LCK Roster Sync
 
 on:
   schedule:
-    - cron: '0,20,40 * * * *'
+    - cron: '0,30 * * * *'
   workflow_dispatch: 
 
 jobs:
@@ -24,6 +24,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node ./scripts/sync-roster.js
+          PANDASCORE_API_KEY: ${{ secrets.PANDASCORE_API_KEY }}
+        run: node scripts/sync-roster.js
+
 
 
