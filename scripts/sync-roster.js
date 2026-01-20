@@ -18,7 +18,7 @@ async function syncWithPandaScore() {
     console.error("오류: PSK 환경 변수가 전달되지 않았습니다.");
     return;
   }
-  console.log(`API 키 확인됨: ${PANDA_TOKEN.substring(0, 4)}****`);
+  console.log(`API 키 확인됨: ${PSK.substring(0, 4)}****`);
 
   try {
     console.log("PandaScore API로부터 LCK 로스터를 호출합니다...");
@@ -30,7 +30,7 @@ async function syncWithPandaScore() {
         'sort': 'name'
       },
       headers: { 
-        'Authorization': `Bearer ${PANDA_TOKEN}`,
+        'Authorization': `Bearer ${PSK}`,
         'Accept': 'application/json'
       }
     });
