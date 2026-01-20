@@ -18,8 +18,11 @@ jobs:
         with:
           node-version: '18'
 
+      # 도구 설치 과정을 확실히 추가합니다.
       - name: Install dependencies
-        run: npm install axios @supabase/supabase-js
+        run: |
+          npm init -y
+          npm install axios @supabase/supabase-js
 
       - name: Run sync script
         env:
