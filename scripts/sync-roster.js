@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 async function syncRoster() {
-  console.log("로스터 동기화 시작...");
+  console.log("LCK 로스터 동기화 시작...");
   try {
     const url = "https://lol.fandom.com/api.php";
     const params = {
@@ -22,12 +22,14 @@ async function syncRoster() {
 
     const response = await axios.get(url, { params });
     
-    const players = response.data?.cargoquery || [];
+    const players = response.data && response.data.cargoquery ? response.data.cargoquery : [];
     
     if (players.length === 0) {
-      console.log("가져올 데이터가 없습니다. API 파라미터를 확인하세요.");
+      console.log("가져온 데이터가 없습니다.");
       return;
     }
+
+    console.log(`${players.length}명의 데이터를 처리 중...`);
 
     for (const item of players) {
       const p = item.title;
@@ -42,9 +44,9 @@ async function syncRoster() {
         
       if (error) console.error(`Error syncing ${p.ID}:`, error);
     }
-    console.log(`동기화 완료! 총 ${players.length}명의 선수를 업데이트했습니다.`);
+    console.log("동기화가 성공적으로 완료되었습니다!");
   } catch (err) {
-    console.error("에러 발생:", err.message);
+    console.error("실행 중 에러 발생:", err.message);
     process.exit(1);
   }
 }
