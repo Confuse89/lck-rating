@@ -7,7 +7,7 @@ const PSK = process.env.PSK;
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function syncLckStats() {
-  console.log("--- [상세 지표 수집 시작] ---");
+  console.log("--- [매치 수집 시작] ---");
 
   try {
     const response = await axios.get('https://api.pandascore.co/lol/matches', {
@@ -15,11 +15,8 @@ async function syncLckStats() {
         'filter[league_id]': 293,
         'filter[status]': 'finished',
         'range[begin_at]': '2026-01-01T00:00:00Z,2026-12-31T23:59:59Z',
-        'per_page': 100
-      },
-      headers: { 
-        'Authorization': `Bearer ${PSK.trim()}`,
-        'Accept': 'application/json'
+        'per_page': 100,
+        'token': PSK.trim()
       }
     });
 
@@ -27,7 +24,7 @@ async function syncLckStats() {
     console.log(`🔎 분석할 총 매치 수: ${matches.length}개`);
 
     if (matches.length === 0) {
-      console.log("⚠️ 종료된 경기가 없습니다.");
+      console.log("⚠️ 종료된 경기가 없거나 토큰 권한을 확인하세요.");
       return;
     }
 
@@ -38,9 +35,8 @@ async function syncLckStats() {
       for (const game of match.games) {
         try {
           const gameDetail = await axios.get(`https://api.pandascore.co/lol/games/${game.id}`, {
-            headers: { 
-              'Authorization': `Bearer ${PSK.trim()}`,
-              'Accept': 'application/json'
+            params: { 
+              'token': PSK.trim() 
             }
           });
 
@@ -94,9 +90,13 @@ async function syncLckStats() {
         last_updated: new Date()
       }).eq('name', name);
     }
-    console.log("🎉 완료!");
+    console.log("🎉 모든 전적 업데이트 완료!");
   } catch (err) {
-    console.error("❌ 오류:", err.response?.data || err.message);
+    if (err.response && err.response.data) {
+      console.error("❌ API 오류:", err.response.data);
+    } else {
+      console.error("❌ 실행 오류:", err.message);
+    }
   }
 }
 
