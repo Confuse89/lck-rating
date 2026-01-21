@@ -5,48 +5,47 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PSK = process.env.PSK;
 
 async function sync() {
-  console.log("--- [리그 로스터 동기화] ---");
+  console.log("--- [필터 없이 전체 수집 후 선별 저장] ---");
   
-  const targetLeagueIds = [293, 294, 4198, 4197, 4201];
+  const targetLeagueIds = [293, 294, 4198, 4197, 4201]; 
 
   try {
     let totalSaved = 0;
 
-    for (const leagueId of targetLeagueIds) {
-      console.log(`📡 리그 ID [${leagueId}] 데이터 요청 중...`);
+    for (const page of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+      console.log(`📡 ${page}페이지 팀 목록 탐색 중...`);
       
       const response = await axios.get('https://api.pandascore.co/lol/teams', {
-        params: { 
-          'filter[league_id]': leagueId,
-          'per_page': 100 
-        },
+        params: { 'per_page': 100, 'page': page },
         headers: { 'Authorization': `Bearer ${PSK.trim()}` }
       });
 
-      const teams = response.data;
-      console.log(`🔎 ID [${leagueId}]에서 ${teams.length}개의 팀을 발견했습니다.`);
+      const allTeams = response.data;
 
-      for (const team of teams) {
-        const players = team.players;
+      for (const team of allTeams) {
+        const leagueId = team.league_id || (team.current_league && team.current_league.id);
 
-        if (players && players.length > 0) {
-          console.log(`✅ [${team.name}] 선수 ${players.length}명 저장 중...`);
-          for (const p of players) {
-            const { error } = await supabase.from('players').upsert({
-              name: p.name,
-              position: p.role || 'Unknown',
-              team_name: team.name,
-              image_url: p.image_url,
-              team_id: team.id
-            }, { onConflict: 'name' });
+        if (targetLeagueIds.includes(leagueId)) {
+          console.log(`✅ 타겟 리그 팀 발견: [${team.name}] (League ID: ${leagueId})`);
+          
+          if (team.players && team.players.length > 0) {
+            for (const p of team.players) {
+              const { error } = await supabase.from('players').upsert({
+                name: p.name,
+                position: p.role || 'Unknown',
+                team_name: team.name,
+                image_url: p.image_url,
+                team_id: team.id
+              }, { onConflict: 'name' });
 
-            if (!error) totalSaved++;
+              if (!error) totalSaved++;
+            }
           }
         }
       }
     }
     
-    console.log(`\n🎉 완료: 총 ${totalSaved}명의 선수가 저장되었습니다.`);
+    console.log(`\n🎉 완료: 총 ${totalSaved}명의 리그 선수가 저장되었습니다.`);
 
   } catch (err) {
     console.error("❌ 오류 발생:", err.response?.data || err.message);
