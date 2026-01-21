@@ -1,8 +1,8 @@
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 
-const PSK = process.env.PSK;
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const PSK = process.env.PSK;
 
 async function syncLckStats() {
   if (!PSK) {
