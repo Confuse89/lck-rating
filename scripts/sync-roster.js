@@ -5,25 +5,53 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PSK = process.env.PSK;
 
 async function sync() {
-  console.log("--- [긴급 진단] ---");
-  console.log("전달받은 PSK 값 길이:", PSK ? PSK.length : "0 (데이터 없음)");
-  console.log("------------------");
-
-  if (!PSK || PSK.length < 5) {
-    console.error("❌ 실패: GitHub에서 API 키를 가져오지 못했습니다. Secret 이름을 확인하세요.");
-    return;
-  }
-
+  console.log("--- [데이터 수신 단계] ---");
+  
   try {
     const response = await axios.get('https://api.pandascore.co/lol/players', {
-      params: { 'filter[league_id]': 293, 'per_page': 100 },
-      headers: { 'Authorization': `Bearer ${PSK.trim()}` } // 공백 제거 추가
+      params: { 
+        'filter[league_id]': 293,
+        'sort': 'name',
+        'per_page': 100 
+      },
+      headers: { 
+        'Authorization': `Bearer ${PSK.trim()}`,
+        'Accept': 'application/json'
+      }
     });
 
-    console.log(`✅ 성공: PandaScore에서 ${response.data.length}명의 데이터를 수신했습니다.`);
-    // ... (이후 저장 로직 동일)
+    const players = response.data;
+    console.log(`✅ 데이터 수신 성공: ${players.length}명의 선수를 발견했습니다.`);
+
+    if (players.length === 0) {
+      console.warn("데이터가 비어있습니다. 현재 시즌 정보가 업데이트 중일 수 있습니다.");
+      return;
+    }
+
+    for (const p of players) {
+      if (p.current_team) {
+        const { error } = await supabase.from('players').upsert({
+          name: p.name,
+          position: p.role || 'Unknown',
+          team_name: p.current_team.name,
+          image_url: p.image_url
+        }, { onConflict: 'name' });
+
+        if (error) console.error(`DB 저장 실패 (${p.name}):`, error.message);
+      }
+    }
+    
+    console.log("🎉 로스터 정보가 Supabase에 저장되었습니다!");
+
   } catch (err) {
-    console.error("❌ API 호출 오류:", err.response?.data?.error || err.message);
+    if (err.response) {
+      console.error("❌ API 오류 발생:");
+      console.error("상태 코드:", err.response.status);
+      console.error("오류 메시지:", JSON.stringify(err.response.data));
+    } else {
+      console.error("❌ 네트워크 오류:", err.message);
+    }
   }
 }
+
 sync();
