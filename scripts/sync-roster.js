@@ -5,14 +5,13 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const PSK = process.env.PSK;
 
 async function sync() {
-  console.log("--- [데이터 수신 단계] ---");
+  console.log("--- [LCK 데이터 동기화 시작] ---");
   
   try {
-    const response = await axios.get('https://api.pandascore.co/lol/players', {
+    const response = await axios.get('https://api.pandascore.co/lol/teams', {
       params: { 
         'filter[league_id]': 293,
-        'sort': 'name',
-        'per_page': 100 
+        'per_page': 50 
       },
       headers: { 
         'Authorization': `Bearer ${PSK.trim()}`,
@@ -20,34 +19,35 @@ async function sync() {
       }
     });
 
-    const players = response.data;
-    console.log(`✅ 데이터 수신 성공: ${players.length}명의 선수를 발견했습니다.`);
+    const teams = response.data;
+    console.log(`✅ LCK 팀 수신 성공: ${teams.length}개 팀 확인`);
 
-    if (players.length === 0) {
-      console.warn("데이터가 비어있습니다. 현재 시즌 정보가 업데이트 중일 수 있습니다.");
-      return;
-    }
+    let totalSaved = 0;
 
-    for (const p of players) {
-      if (p.current_team) {
-        const { error } = await supabase.from('players').upsert({
-          name: p.name,
-          position: p.role || 'Unknown',
-          team_name: p.current_team.name,
-          image_url: p.image_url
-        }, { onConflict: 'name' });
+    for (const team of teams) {
+      if (team.players && team.players.length > 0) {
+        console.log(`[${team.name}] 로스터 저장 중... (${team.players.length}명)`);
+        
+        for (const p of team.players) {
+          const { error } = await supabase.from('players').upsert({
+            name: p.name,
+            position: p.role || 'Unknown',
+            team_name: team.name,
+            image_url: p.image_url
+          }, { onConflict: 'name' });
 
-        if (error) console.error(`DB 저장 실패 (${p.name}):`, error.message);
+          if (!error) totalSaved++;
+        }
       }
     }
     
-    console.log("🎉 로스터 정보가 Supabase에 저장되었습니다!");
+    console.log(`\n🎉 동기화 완료! 총 ${totalSaved}명의 선수가 Supabase에 업데이트되었습니다.`);
 
   } catch (err) {
     if (err.response) {
       console.error("❌ API 오류 발생:");
       console.error("상태 코드:", err.response.status);
-      console.error("오류 메시지:", JSON.stringify(err.response.data));
+      console.error("상세 내용:", JSON.stringify(err.response.data));
     } else {
       console.error("❌ 네트워크 오류:", err.message);
     }
