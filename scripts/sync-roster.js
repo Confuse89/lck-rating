@@ -1,7 +1,3 @@
-  const tierKeywords = [
-    "LCK", "LPL", "LEC", "LCS", "CHALLENGERS", "ACADEMY", 
-    "T1", "GEN", "DK", "HLE", "KT", "DNS", "BFX", "DRX", "NS", "BRO"
-  ];
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 
@@ -12,14 +8,14 @@ async function sync() {
   console.log("--- [데이터 수집] ---");
   
   const tierKeywords = [
-    "LCK", "LPL", "LEC", "LCS", "CHALLENGERS", "ACADEMY", 
+    "LCK", "LPL", "LEC", "LCS",
     "T1", "GEN", "DK", "HLE", "KT", "DNS", "BFX", "DRX", "NS", "BRO"
   ];
 
   try {
     let totalSaved = 0;
 
-    for (const page of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    for (const page of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]) {
       console.log(`📡 ${page}페이지 최신 팀 분석 중...`);
       
       const response = await axios.get('https://api.pandascore.co/lol/teams', {
@@ -54,7 +50,7 @@ async function sync() {
       }
     }
     
-    console.log(`\n🎉 완료: 총 ${totalSaved}명의 최신 정예 선수가 저장되었습니다!`);
+    console.log(`\n🎉 완료: 총 ${totalSaved}명의 선수가 저장되었습니다!`);
 
   } catch (err) {
     console.error("❌ 실행 중 오류:", err.response?.data || err.message);
