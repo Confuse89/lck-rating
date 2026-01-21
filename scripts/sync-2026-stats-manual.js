@@ -17,6 +17,7 @@ async function syncLckStats() {
         'sort': '-begin_at'
       },
       headers: { 'Authorization': `Bearer ${PSK.trim()}` }
+        'Accept': 'application/json'
     });
 
     const matches = response.data;
